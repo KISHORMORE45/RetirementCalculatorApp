@@ -1,0 +1,123 @@
+﻿@model RetirementCalculatorApp.Models.RetirementModel
+
+<div class="container mt-5">
+    <h2 class="text-center text-primary">Retirement Calculator</h2>
+
+    <form asp-action="Index" method="post" class="row g-3">
+        <!-- Inputs -->
+        <div class="col-md-3">
+            <label>Current Age</label>
+            <input asp-for="currentAge" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Retirement Age</label>
+            <input asp-for="RetirementAge" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Life Expectancy</label>
+            <input asp-for="LifeExpectancy" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Current Monthly Expenses</label>
+            <input asp-for="CurrentMonthlyExpense" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Inflation Rate (%)</label>
+            <input asp-for="InflationRate" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Return Before Retirement (%)</label>
+            <input asp-for="PreRetirementReturn" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Return After Retirement (%)</label>
+            <input asp-for="PostRetirementReturn" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Current Savings (₹)</label>
+            <input asp-for="CurrentSavings" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Monthly SIP (₹)</label>
+            <input asp-for="MonthlySIP" class="form-control" />
+        </div>
+
+        <!-- Show button -->
+        <div class="col-md-12 text-center mt-3">
+            <button type="submit" class="btn btn-primary">Calculate</button>
+        </div>
+    </form>
+
+    @if (Model.CorpusRequired > 0)
+    {
+        <div class="card mt-4 shadow-lg rounded-4">
+            <div class="card-body text-center">
+                <h4 class="text-primary">Results</h4>
+
+                <p><b>Monthly Expense at Retirement:</b> ₹@Model.ExpenseAtRetirement.ToString("N0")</p>
+                <p><b>Corpus Required:</b> ₹@Model.CorpusRequired.ToString("N0")</p>
+                <p><b>Future Value (Fixed SIP):</b> ₹@Model.FutureValueOfInvestments.ToString("N0")</p>
+
+                @if (Model.GapOrSurplus > 0)
+                {
+                    <p class="text-danger fw-bold">Gap: ₹@Model.GapOrSurplus.ToString("N0")` (You need to save more!)</p>
+
+                    <!-- Step-Up SIP input appears ONLY when Gap exists -->
+                    <form asp-action="Index" method="post" class="mt-4">
+                        @* Hidden fields to preserve previous inputs *@
+                        <input type="hidden" asp-for="currentAge" />
+                        <input type="hidden" asp-for="RetirementAge" />
+                        <input type="hidden" asp-for="LifeExpectancy" />
+                        <input type="hidden" asp-for="CurrentMonthlyExpense" />
+                        <input type="hidden" asp-for="InflationRate" />
+                        <input type="hidden" asp-for="PreRetirementReturn" />
+                        <input type="hidden" asp-for="PostRetirementReturn" />
+                        <input type="hidden" asp-for="CurrentSavings" />
+                        <input type="hidden" asp-for="MonthlySIP" />
+
+                        <div class="col-md-4 offset-md-4">
+                            <label>Annual SIP Increase (%)</label>
+                            <input asp-for="AnnualSipIncreasePercent" class="form-control" />
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-success">Recalculate with Step-Up SIP</button>
+                        </div>
+                    </form>
+
+                    @if (Model.StepUpFutureValue > 0)
+                    {
+                        <hr />
+                        <h5 class="text-secondary">Step-Up SIP Analysis</h5>
+                        <p>
+                            <b>Future Value (Step-Up SIP):</b>
+                            <span class="fw-bold text-success">₹@Model.StepUpFutureValue.ToString("N0")</span>
+                        </p>
+
+
+                        var newGap = Model.CorpusRequired - Model.StepUpFutureValue;
+
+
+                        @if (newGap > 0)
+                        {
+                            <p class="text-danger fw-bold">
+                                New Gap after Step-Up: ₹@newGap.ToString("N0") <br />
+                                (Still short, try increasing SIP % more!)
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-success fw-bold">
+                                🎉 Gap Covered! Surplus after Step-Up: ₹@Math.Abs(newGap).ToString("N0")
+                            </p>
+                        }
+                    }
+                }
+                else
+                {
+                    <p class="text-success fw-bold">Surplus: ₹@Math.Abs(Model.GapOrSurplus).ToString("N0") (You are safe!)</p>
+                }
+            </div>
+        </div>
+    }
+</div>
